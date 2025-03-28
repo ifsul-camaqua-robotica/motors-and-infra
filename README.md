@@ -4,6 +4,22 @@
 # DESCRIÇÃO DO CÓDIGO:
 
 - O código atualmente apenas consegue fazer o carro se movimentar, não houve tempo para testes da parte dos infravermelhos
+
+# FUNÇÃO "LerSensores":
+
+INPUTS:
+- Limite Frente -> Limite de distancia que o robo pode chegar de uma parede em sua frente
+- Limite Lados -> Limite de distancia que o robo pode chegar de uma parede em suas laterais
+
+PROCESSAMENTO:
+- Ler valores dos sensores infravermelhos e comparar seus valores com os limites entregados nos argumentos da função
+
+OUTPUTS:
+- Valor string de acordo com a função necessária, seja ela "FRENTE", "ESQUERDA", "DIREITA" ou "ATRAS"
+
+# INICIALIZAÇÂO SENSORES INFRAVERMELHO:
+
+- está no código e teoricamente funcionando, irei explicar escrito aqui em breve.
   
 # BIBLIOTECAS:
 
@@ -30,10 +46,10 @@
   
 - PINOS DE COMUNICAÇÃO INFRAVERMELHOS -> SDA E SCL
 
-- PINO SHUT SENSOR UM -> 22
-- PINO SHUT SENSOR DOIS -> 23
-- PINO SHUT SENSOR TRES -> 24
-- PINO SHUT SENSOR QUATRO -> 25
+- PINO SHUT SENSOR UM -> 22 (SENSOR DA DIREITA)
+- PINO SHUT SENSOR DOIS -> 23 (SENSOR CENTRAL DA DIREITA)
+- PINO SHUT SENSOR TRES -> 24 (SENSOR CENTRAL DA ESQUERDA)
+- PINO SHUT SENSOR QUATRO -> 25 (SENSOR DA ESQUERDA)
 
 # LINGUAGEM:
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/arduino/arduino-original.svg" width="115" height="115"/>
