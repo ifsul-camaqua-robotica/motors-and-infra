@@ -5,7 +5,7 @@
 
 - O código atualmente apenas consegue fazer o carro se movimentar, não houve tempo para testes da parte dos infravermelhos
 
-# FUNÇÃO "LerSensores":
+# FUNÇÃO "LerSensores(LIMITE-FRENTE, LIMITE-LADOS)":
 
 INPUTS:
 - Limite Frente -> Limite de distancia que o robo pode chegar de uma parede em sua frente
@@ -15,7 +15,7 @@ PROCESSAMENTO:
 - Ler valores dos sensores infravermelhos e comparar seus valores com os limites entregados nos argumentos da função
 
 OUTPUTS:
-- Valor string de acordo com a execução necessária, seja ela "FRENTE", "ESQUERDA", "DIREITA" ou "ATRAS"
+- Valor string de acordo com o valor recebido nos sensores e verificação de qual ação é necessária para navegar o labirinto, seja ela "FRENTE", "ESQUERDA", "DIREITA" ou "ATRAS"
 
 # INICIALIZAÇÂO SENSORES INFRAVERMELHO:
 
