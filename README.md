@@ -56,7 +56,7 @@ OUTPUTS:
 
 # AUTORES:
 
-[<img loading="lazy" src="https://avatars.githubusercontent.com/u/???v=4" width=115><br><sub>Gabriela Hoppe Garcia</sub>](https://github.com/gabriela???)
+[<img loading="lazy" src="https://avatars.githubusercontent.com/u/165217446?v=4" width=115><br><sub>Gabriela Hoppe Garcia</sub>](https://github.com/GabrielaGarcia03)
 
 [<img loading="lazy" src="https://avatars.githubusercontent.com/u/110566021?v=4" width=115><br><sub>Vítor Maziero Oliveira</sub>](https://github.com/vitor-m-o)
 
