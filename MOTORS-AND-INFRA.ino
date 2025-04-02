@@ -7,16 +7,16 @@
 #include <VL6180X.h>
 
 //=====DEFINICAO-DOS-SENSORES-INFRAVERMELHOS=====//
-VL6180X sensorum;
-VL6180X sensordois;
-VL6180X sensortres;
-VL6180X sensorquatro;
+VL6180X sensorum; //SENSOR DIREITA
+VL6180X sensordois; //SENSOR CENTRAL DIREITA
+VL6180X sensortres; //SENSOR CENTRAL ESQUERDA
+VL6180X sensorquatro; //SENSOR ESQUERDA
 
 //=====DEFINIR-O-PINO-XSHUT-DO-SENSOR-INFRAVERMELHO=====//
-const int shutPinUm = 22;  
-const int shutPinDois = 23;  
-const int shutPinTres = 24;  
-const int shutPinQuatro = 25;  
+const int shutPinUm = 22; //SENSOR DIREITA
+const int shutPinDois = 23; //SENSOR CENTRAL DIREITA
+const int shutPinTres = 24; //SENSOR CENTRAL ESQUERDA
+const int shutPinQuatro = 25; //SENSOR ESQUERDA
 
 //// GABRIELA ////
 //// TAI4V /////
@@ -41,7 +41,8 @@ const int shutPinQuatro = 25;
 
 //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
-void setup() {
+void setup() 
+{
 
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
@@ -59,37 +60,30 @@ void setup() {
   
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
-  //=====INICIALIZAÇÃO-DOS-SENSORES-INFRAVERMELHO=====//
-
   //=====INICIALIZAR-SERIAL=====//
   Serial.begin(9600);
 
   //=====INICIALIZAR-WIRE=====//
   Wire.begin();
 
-  //=====DEFINIR-O-MODO-DE-PINO-DO-XSHUT=====//
+  //=====INICIALIZAÇÃO-DOS-SENSORES-INFRAVERMELHO=====//
+
+  //=====DEFINIR-O-MODO-DE-PINO-DOS-SHUTS=====//
   pinMode(shutPinUm, OUTPUT);
-  //=====ENVIAR-SINAL-PARA-O-PINO-XSHUT-ASSIM-DESLIGANDO-O-SENSOR-ATE-QUE-ELE-NAO-RECEBA-MAIS-SINAL-NESTA-PORTA=====//
-  digitalWrite(shutPinUm, LOW);
-  //=====ESPERAR-PARA-GARANTIR-VERACIDADE-DO-PINO=====//
-  delay(50);
-
-  //=====DEFINIR-O-MODO-DE-PINO-DO-XSHUT=====//
   pinMode(shutPinDois, OUTPUT);
-  //=====ENVIAR-SINAL-PARA-O-PINO-XSHUT-ASSIM-DESLIGANDO-O-SENSOR-ATE-QUE-ELE-NAO-RECEBA-MAIS-SINAL-NESTA-PORTA=====//
-  digitalWrite(shutPinDois, LOW);
-  //=====ESPERAR-PARA-GARANTIR-VERACIDADE-DO-PINO=====//
-  delay(50);
-
-  //=====DEFINIR-O-MODO-DE-PINO-DO-XSHUT=====//
   pinMode(shutPinTres, OUTPUT);
-  //=====ENVIAR-SINAL-PARA-O-PINO-XSHUT-ASSIM-DESLIGANDO-O-SENSOR-ATE-QUE-ELE-NAO-RECEBA-MAIS-SINAL-NESTA-PORTA=====//
+
+  //=====ENVIAR-SINAL-PARA-OS-PINOS-SHUT-ASSIM-DESLIGANDO-OS-SENSORES=====//
+  digitalWrite(shutPinUm, LOW);
+  digitalWrite(shutPinDois, LOW);
   digitalWrite(shutPinTres, LOW);
   //=====ESPERAR-PARA-GARANTIR-VERACIDADE-DO-PINO=====//
   delay(50);
 
   //=====AGORA-QUE-HA-APENAS-UM-SENSOR-DE-MESMO-ENDERECO-CONECTADO-E-LIGADO-INICIALIZAR-O-PRIMEIRO-SENSOR=====//
-  sensorquatro.init();
+
+  sensorquatro.init(); //SENSOR ESQUERDA
+
   //=====DEFINIR-CONFIGURACOES-PADRAO=====//
   sensorquatro.configureDefault();
   //=====DEFINIR-TIMEOUT=====//
@@ -97,8 +91,10 @@ void setup() {
   //=====MUDAR-O-ENDERECO-DO-SENSOR-PARA-0X30-ASSIM-ACABANDO-COM-O-CONFLITO-DE-ENDERECOS=====//
   sensorquatro.setAddress(0x30);
 
-  //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-SEGUNDO-SENSOR-NOVAMENTE=====//
-  digitalWrite(shutPinTres, HIGH);
+  //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-TERCEIRO-SENSOR-NOVAMENTE=====//
+
+  digitalWrite(shutPinTres, HIGH); //SENSOR CENTRAL ESQUERDA
+
   //=====ESPERAR-PARA-POSSUIR-VERACIDADE-DO-PINO=====//
   delay(50);
 
@@ -112,7 +108,9 @@ void setup() {
   sensortres.setAddress(0x31);
 
   //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-SEGUNDO-SENSOR-NOVAMENTE=====//
-  digitalWrite(shutPinDois, HIGH);
+
+  digitalWrite(shutPinDois, HIGH); //SENSOR CENTRAL DIREITA
+
   //=====ESPERAR-PARA-POSSUIR-VERACIDADE-DO-PINO=====//
   delay(50);
 
@@ -125,13 +123,25 @@ void setup() {
   //=====MUDAR-O-ENDERECO-DO-SENSOR-PARA-0X32-ASSIM-ACABANDO-COM-O-CONFLITO-DE-ENDERECOS=====//
   sensordois.setAddress(0x32);
 
-  //=====INICIALIZAR-O-SEGUNDO-SENSOR=====//
+  //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-PRIMEIRO-SENSOR-NOVAMENTE=====//
+
+  digitalWrite(shutPinUm, HIGH);  //SENSOR DIREITA
+
+  //=====ESPERAR-PARA-POSSUIR-VERACIDADE-DO-PINO=====//
+  delay(50);
+
+  //=====INICIALIZAR-O-TERCEIRO-SENSOR=====//
   sensorum.init();
   //=====DEFINIR-CONFIGURACOES-PADRAO=====//
   sensorum.configureDefault();
   //=====DEFINIR-TIMEOUT=====//
   sensorum.setTimeout(500);
   //=====NAO-E-NECESSARIO-MUDAR-O-ENDERECO-DO-PRIMEIRO-SENSOR-POIS-HA-APENAS-UM-COM-O-ENDERECO-0X29=====//
+
+  //=====FUNÇÕES-QUE-TALVEZ-PRECISEMOS-PARA-OS-SENSORES=====//
+  
+  //sensor.writeReg(VL6180X::SYSRANGE__PART_TO_PART_RANGE_OFFSET, 5);  // Define um offset de 5 mm
+  //sensor.setScaling(2);  // Escala 2x para maior alcance 
 }
 
 void loop() {
@@ -174,6 +184,7 @@ void LerSensores(unsigned int limiteFrente, unsigned int limiteLados)
   int sensorTres = sensortres.readRangeSingleMillimeters(); //SENSOR CENTRAL ESQUERDA
   int sensorQuatro = sensorquatro.readRangeSingleMillimeters(); //SENSOR ESQUERDA
 
+  //=====VERIFICAÇÃO-PARA-ENTREGAR-VALOR-CORRESPONDENTE-A-AÇÃO=====//
   if ( (sensorDois <= limiteFrente) && (sensorTres <= limiteFrente) )
   {
     if ( sensorUm > limiteLados)
