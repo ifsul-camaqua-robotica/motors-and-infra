@@ -24,9 +24,11 @@ OUTPUTS:
 - E por isso, nós desligamos todos os sensores com o pino SHUT, menos um, e após isso trocamos o endereço via código do sensor que permanece ligado, e após isso repetimos o processo, ligando cada sensor gradativamente e trocando seus endereços
 - Após a troca de endereço de cada sensor, também é necessário fazer a inicialização dele, definindo a inicialização, configuração e o tempo de delay entre respostas
 
+# FUNÇÕES DA BIBLIOTECA "VL6180X.h"
+
 # FUNÇÃO ".init()":
 
-- Função para inicialização de um sensor infravermelho do tipo VL6180X
+- Função para inicialização do sensor infravermelho
 
 # FUNÇÃO ".configureDefault()":
 
