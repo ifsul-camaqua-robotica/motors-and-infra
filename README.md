@@ -35,7 +35,7 @@
 - PINO SHUT SENSOR TRES -> 24 (SENSOR CENTRAL DA ESQUERDA)
 - PINO SHUT SENSOR QUATRO -> 25 (SENSOR DA ESQUERDA)
 
-# INICIALIZAÇÂO SENSORES INFRAVERMELHO:
+# INICIALIZAÇÃO SENSORES INFRAVERMELHO:
 
 - Na inicialização dos sensores infravermelhos, para que, não possua conflito entre os sensores, pois todos são de mesmo endereço, utilizamos do ultimo pino que há em sua composição, o "SHUT"
 - Ao utilizar o "SHUT" o sensor fica indisponível para acesso e já não envia ou recebe sinais do I2C, permitindo assim que ao um sensor estar desligado, fazer alterações no sensor que permanece ligado apenas
