@@ -68,6 +68,8 @@
 
 - Função para ler o valor recebido nos infravermelhos em milimetros
 
+# FUNÇÔES CRIADAS NO CÓDIGO:
+
 # FUNÇÃO "LerSensores(LIMITE-FRENTE, LIMITE-LADOS)":
 
 INPUTS:
