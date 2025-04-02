@@ -15,12 +15,39 @@ PROCESSAMENTO:
 - Ler valores dos sensores infravermelhos e comparar seus valores com os limites entregados nos argumentos da função
 
 OUTPUTS:
-- Valor string de acordo com a função necessária, seja ela "FRENTE", "ESQUERDA", "DIREITA" ou "ATRAS"
+- Valor string de acordo com a execução necessária, seja ela "FRENTE", "ESQUERDA", "DIREITA" ou "ATRAS"
 
 # INICIALIZAÇÂO SENSORES INFRAVERMELHO:
 
-- está no código e teoricamente funcionando, irei explicar escrito aqui em breve.
-  
+- Na inicialização dos sensores infravermelhos, para que, não possua conflito entre os sensores, pois todos são de mesmo endereço, utilizamos do ultimo pino que há em sua composição, o "SHUT"
+- Ao utilizar o "SHUT" o sensor fica indisponível para acesso e já não envia ou recebe sinais do I2C, permitindo assim que ao um sensor estar desligado, fazer alterações no sensor que permanece ligado apenas
+- E por isso, nós desligamos todos os sensores com o pino SHUT, menos um, e após isso trocamos o endereço via código do sensor que permanece ligado, e após isso repetimos o processo, ligando cada sensor gradativamente e trocando seus endereços
+- Após a troca de endereço de cada sensor, também é necessário fazer a inicialização dele, definindo a inicialização, configuração e o tempo de delay entre respostas
+
+# FUNÇÃO ".init()":
+
+- Função para inicialização de um sensor infravermelho do tipo VL6180X
+
+# FUNÇÃO ".configureDefault()":
+
+- Função para definir configurações do sensor como padrão, não necessário mudar
+
+# FUNÇÃO ".setTimeout(COLOCAR-AQUI-O-TEMPO-DE-RESPOSTA)":
+
+- Função para definir o tempo de atraso entre cada resposta do sensor infravermelho, colocando o tempo em milisegundos dentro dos parenteses
+
+# FUNÇÃO ".setAddress(COLOCAR-AQUI-ENDEREÇO)":
+
+- Função para definir/trocar o endereço do sensor citado, com a função permitindo escolher o endereço e coloca-lo entre os parenteses
+
+# FUNÇÂO ".setScaling(COLOCAR-AQUI-A-ESCALA)":
+
+- Função para definir escala do sensor infravermelho, permitindo aumentar ou diminuir a escala e assim mudando o seu campo de visão com o valor da escala dentro dos parenteses
+
+# FUNÇÃO ".readRangeSingleMillimeters()":
+
+- Função para ler o valor recebido nos infravermelhos em milimetros
+
 # BIBLIOTECAS:
 
 - Wire.h -> I2C
