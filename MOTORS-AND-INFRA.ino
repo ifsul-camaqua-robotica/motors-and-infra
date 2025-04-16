@@ -40,13 +40,38 @@ const int shutPinQuatro = 25; //SENSOR ESQUERDA
 #define DIRECAO_ANTIHORARIO_DIREITA 11
 
 //// PINOS DEIREÇÕES MOTOR ESQUERDA ////
-#define DIRECAO_HORAIO_ESQUERDA 12
-#define DIRECAO_ANTIHORARIO_ESQUERDA 13
+#define DIRECAO_HORAIO_ESQUERDA 13
+#define DIRECAO_ANTIHORARIO_ESQUERDA 12
 
 //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
+// Pinos do Encoder
+#define ENCODER_A_ESQUERDA 2  // Pino de interrupção
+#define ENCODER_B_ESQUERDA 4  // Pino comum
+
+#define ENCODER_A_DIREITA 3  // Pino de interrupção
+#define ENCODER_B_DIREITA 5  // Pino comum
+
+volatile long encoderPulses_Esquerda = 0;  // Contagem dos pulsos do encoder
+volatile long encoderPulses_Direita = 0;
+int targetPulses = 1100;          // Quantidade de pulsos alvo (exemplo)
+
+int tempoAnterior;
+
+int RSE, RPE;
+
+int encoderAnterior_Esquerda = 0;
+
 void setup() 
 {
+  pinMode(ENCODER_A_ESQUERDA, INPUT_PULLUP);
+  pinMode(ENCODER_B_ESQUERDA, INPUT_PULLUP);
+
+  pinMode(ENCODER_A_DIREITA, INPUT_PULLUP);
+  pinMode(ENCODER_B_DIREITA, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A_ESQUERDA), encoderISR_ESQUERDA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A_DIREITA), encoderISR_DIREITA, CHANGE);
 
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
@@ -58,9 +83,6 @@ void setup()
 
   pinMode(DIRECAO_HORAIO_ESQUERDA, OUTPUT);
   pinMode(DIRECAO_ANTIHORARIO_ESQUERDA, OUTPUT);
-
-  digitalWrite(PWM_MOTOR_ESQUERDA, HIGH);
-  digitalWrite(PWM_MOTOR_DIREITA, HIGH);
   
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
@@ -69,6 +91,8 @@ void setup()
 
   //=====INICIALIZAR-WIRE=====//
   Wire.begin();
+
+  millis();
 
   //=====INICIALIZAÇÃO-DOS-SENSORES-INFRAVERMELHO=====//
 
@@ -207,39 +231,84 @@ void loop()
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
-  display.println("Esquerdo - ");
-  display.setCursor(110, 0);
+  display.println("E - ");
+  display.setCursor(25, 0);
   display.println(dist1);
 
   display.setCursor(0, 10);
-  display.println("Central Esquerdo - ");
-  display.setCursor(110, 10);
+  display.println("CE- ");
+  display.setCursor(25, 10);
   display.println(dist2);
 
   display.setCursor(0, 20);
-  display.println("Central Direito - ");
-  display.setCursor(110, 20);
+  display.println("CD - ");
+  display.setCursor(25, 20);
   display.println(dist3);
 
   display.setCursor(0, 30);
-  display.println("Direito - ");
-  display.setCursor(110, 30);
+  display.println("D - ");
+  display.setCursor(25, 30);
   display.println(dist4);
 
   display.setCursor(0, 40);
-  display.println("Direcao - ");
-  display.setCursor(70, 40);
+  display.println("DR - ");
+  display.setCursor(25, 40);
   display.println(direcao);
+
+  display.setCursor(50, 0);
+  display.println("ENE - ");
+  display.setCursor(85, 0);
+  display.println(encoderPulses_Esquerda);
+
+  display.setCursor(50, 10);
+  display.println("END - ");
+  display.setCursor(85, 10);
+  display.println(encoderPulses_Esquerda);
+
+  //ROTAÇÕES POR SEGUNDO
+  display.setCursor(50, 20);
+  display.println("RSE - ");
+  display.setCursor(85, 20);
+  /*if (millis() - tempoAnterior >= 1000)
+  {
+    RSE = encoderPulses_Esquerda - encoderAnterior_Esquerda;
+
+    encoderPulses_Esquerda = encoderAnterior_Esquerda;
+    tempoAnterior = millis();
+  }*/
+  display.println(RSE);
+
+
+  //ROTAÇÕES POR MINUTO
 
   display.display();
   display.clearDisplay();
+
+  moverCarro(120, direcao);
+}
+
+// Interrupção para contar os pulsos
+void encoderISR_ESQUERDA() {
+    if (digitalRead(ENCODER_A_ESQUERDA) == digitalRead(ENCODER_B_ESQUERDA)) {
+        encoderPulses_Esquerda++;  // Incrementa se girando em um sentido
+    } else {
+        encoderPulses_Esquerda--;  // Decrementa se girando no outro sentido
+    }
+}
+
+void encoderISR_DIREITA() {
+    if (digitalRead(ENCODER_A_DIREITA) == digitalRead(ENCODER_B_DIREITA)) {
+        encoderPulses_Direita++;  // Incrementa se girando em um sentido
+    } else {
+        encoderPulses_Direita--;  // Decrementa se girando no outro sentido
+    }
 }
 
 //=====FUNÇÃO-PARA-LER-SENSORES-INFRAVERMELHOS-E-ENTREGAR-STRING=====//
 String LerSensores()
 {
-  int limiteFrente = 60;
-  int limiteLados = 60;
+  int limiteFrente = 150;
+  int limiteLados = 120;
 
   //=====VARIAVEIS-UTILIZADAS-PARA-LER-SENSORES=====//
   int sensorUm = sensorquatro.readRangeSingleMillimeters(); //SENSOR ESQUERDA
@@ -260,11 +329,64 @@ String LerSensores()
     }
     else
     {
-      return "ATRAS";
+      return "TRAS";
     }
   }
   else
   {
     return "FRENTE";
+  }
+}
+
+void moverCarro(int vel, String dir)
+{
+  int contador;
+
+  Serial.print("ENCODER ESQUERDA:  ");
+  Serial.println(encoderPulses_Esquerda); 
+  Serial.print("ENCODER DIREITA:  ") ;
+  Serial.println(encoderPulses_Direita); 
+  
+  Serial.println(dir);
+  if (dir == "FRENTE")
+  {
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_HORARIO_DIREITA, vel);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+  }
+  else if (dir == "ESQUERDA")
+  {
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
+    analogWrite(DIRECAO_HORARIO_DIREITA, vel);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+
+    delay(600);
+  }
+  else if (dir == "DIREITA")
+  {
+    encoderISR_ESQUERDA();
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
+
+    delay(600);
+  }
+  else if (dir == "TRAS")
+  {
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
+    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
+  }
+  else if (dir == "PARE")
+  {
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+
   }
 }
