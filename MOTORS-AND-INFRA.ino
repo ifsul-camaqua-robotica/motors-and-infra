@@ -5,6 +5,14 @@
 //=====CHAMAR-BIBLIOTECAS-UTILIZADAS=====//
 #include <Wire.h>
 #include <VL6180X.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+//=====PARAMETROS-UTILIZADOS-NA-TELA-OLED=====//
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //=====DEFINICAO-DOS-SENSORES-INFRAVERMELHOS=====//
 VL6180X sensorum; //SENSOR DIREITA
@@ -24,20 +32,16 @@ const int shutPinQuatro = 25; //SENSOR ESQUERDA
 //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
 //// PWM MOTORES ////
-#define PWM_MOTOR_DIREITA 5
-#define PWM_MOTOR_ESQUERDA 8
-
-//// ENABLE MOTORES ////
-#define ENABLE_MOTOR_DIREITA A0
-#define ENABLE_MOTOR_ESQUERDA A1
+#define PWM_MOTOR_DIREITA A2
+#define PWM_MOTOR_ESQUERDA A3
 
 //// PINOS DIREÇÕES MOTOR DIREITA //// 
-#define DIRECAO_HORARIO_DIREITA 6
-#define DIRECAO_ANTIHORARIO_DIREITA 7
+#define DIRECAO_HORARIO_DIREITA 10
+#define DIRECAO_ANTIHORARIO_DIREITA 11
 
 //// PINOS DEIREÇÕES MOTOR ESQUERDA ////
-#define DIRECAO_HORAIO_ESQUERDA 9
-#define DIRECAO_ANTIHORARIO_ESQUERDA 10
+#define DIRECAO_HORAIO_ESQUERDA 12
+#define DIRECAO_ANTIHORARIO_ESQUERDA 13
 
 //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
@@ -49,14 +53,14 @@ void setup()
   pinMode(PWM_MOTOR_DIREITA, OUTPUT);
   pinMode(PWM_MOTOR_ESQUERDA, OUTPUT);
 
-  pinMode(ENABLE_MOTOR_DIREITA, OUTPUT);
-  pinMode(ENABLE_MOTOR_ESQUERDA, OUTPUT);
-
   pinMode(DIRECAO_HORARIO_DIREITA, OUTPUT);
   pinMode(DIRECAO_ANTIHORARIO_DIREITA, OUTPUT);
 
   pinMode(DIRECAO_HORAIO_ESQUERDA, OUTPUT);
   pinMode(DIRECAO_ANTIHORARIO_ESQUERDA, OUTPUT);
+
+  digitalWrite(PWM_MOTOR_ESQUERDA, HIGH);
+  digitalWrite(PWM_MOTOR_DIREITA, HIGH);
   
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
@@ -141,59 +145,118 @@ void setup()
   //=====FUNÇÕES-QUE-TALVEZ-PRECISEMOS-PARA-OS-SENSORES=====//
   
   //sensor.writeReg(VL6180X::SYSRANGE__PART_TO_PART_RANGE_OFFSET, 5);  // Define um offset de 5 mm
-  //sensor.setScaling(2);  // Escala 2x para maior alcance 
+
+  sensorum.setScaling(2);  // Escala 2x para maior alcance 
+  sensordois.setScaling(2);  // Escala 2x para maior alcance 
+  sensortres.setScaling(2);  // Escala 2x para maior alcance 
+  sensorquatro.setScaling(2);  // Escala 2x para maior alcance 
+
+  //=====EXIBIR-MENSAGEM-NA-TELA-OLED=====//
+
+  //=====INICIALIZAR-DISPLAY-(APENAS-UMA-UNICA-VEZ-NO-CODIGO)=====//
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
+  //=====LIMPAR-DISPLAY=====//
+  display.clearDisplay();
+
+  //=====DEFINIR-TAMANHO-DO-TEXTO=====//
+  display.setTextSize(1);
+
+  //=====DEFINIR-COR-DO-TEXTO=====//
+  display.setTextColor(SSD1306_WHITE);
+
+  //=====DEFINIR-CURSOR=====//
+  display.setCursor(0, 0);
+
+  //=====ESCREVER-TEXTO=====//
+  display.println("IFSUL campus Camaqua");
+
+  //=====COLOCAR-A-INFORMAÇÃO-NA-TELA-DO-DISPLAY=====//
+  display.display();
+
+  //=====ESPERAR-2-SEGUNDOS=====//
+  delay(2000);
+  
+  display.clearDisplay();
 }
 
-void loop() {
+void loop() 
+{
+  //=====LER-VALOR-DA-DISTANCIA-DOS-INFRAVERMELHOS=====//
+  //=====O-LIMITE-DOS-SENSORES-INFRAVERMELHOS-E-DE-20CM=====//
+  int dist1 = sensorquatro.readRangeSingleMillimeters();
+  int dist2 = sensordois.readRangeSingleMillimeters();
+  int dist3 = sensortres.readRangeSingleMillimeters();
+  int dist4 = sensorum.readRangeSingleMillimeters();
 
-  //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
+  //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NO-SERIAL-MONITOR=====//
+  Serial.print("Distancia Sensor 1: ");
+  Serial.println(dist1);
+  Serial.print("Distancia Sensor 2: ");
+  Serial.println(dist2);
+  Serial.print("Distancia Sensor 3: ");
+  Serial.println(dist3);
+  Serial.print("Distancia Sensor 4: ");
+  Serial.println(dist4);
 
-  digitalWrite(ENABLE_MOTOR_DIREITA, HIGH);
-  digitalWrite(ENABLE_MOTOR_ESQUERDA, HIGH);
+  String direcao = LerSensores();
+  Serial.print("Direção - ");
+  Serial.println(direcao);
 
-  digitalWrite(DIRECAO_HORARIO_DIREITA, HIGH);
-  digitalWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-  analogWrite(PWM_MOTOR_DIREITA, 150);
+  //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NA-TELA-OLED=====//
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Esquerdo - ");
+  display.setCursor(110, 0);
+  display.println(dist1);
 
-  digitalWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
-  digitalWrite(DIRECAO_ANTIHORARIO_ESQUERDA, HIGH);
-  analogWrite(PWM_MOTOR_ESQUERDA, 150);
+  display.setCursor(0, 10);
+  display.println("Central Esquerdo - ");
+  display.setCursor(110, 10);
+  display.println(dist2);
 
-  delay(2000);
+  display.setCursor(0, 20);
+  display.println("Central Direito - ");
+  display.setCursor(110, 20);
+  display.println(dist3);
 
-  digitalWrite(DIRECAO_HORARIO_DIREITA, LOW);
-  digitalWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-  analogWrite(PWM_MOTOR_DIREITA, 0);
+  display.setCursor(0, 30);
+  display.println("Direito - ");
+  display.setCursor(110, 30);
+  display.println(dist4);
 
-  digitalWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
-  digitalWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
-  analogWrite(PWM_MOTOR_ESQUERDA, 0);
+  display.setCursor(0, 40);
+  display.println("Direcao - ");
+  display.setCursor(70, 40);
+  display.println(direcao);
 
-  delay(3000);
-
-  //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
-  
+  display.display();
+  display.clearDisplay();
 }
 
 //=====FUNÇÃO-PARA-LER-SENSORES-INFRAVERMELHOS-E-ENTREGAR-STRING=====//
-void LerSensores(unsigned int limiteFrente, unsigned int limiteLados)
+String LerSensores()
 {
+  int limiteFrente = 60;
+  int limiteLados = 60;
+
   //=====VARIAVEIS-UTILIZADAS-PARA-LER-SENSORES=====//
-  int sensorUm = sensorum.readRangeSingleMillimeters(); //SENSOR DIREITA
-  int sensorDois = sensordois.readRangeSingleMillimeters(); //SENSOR CENTRAL DIREITA
-  int sensorTres = sensortres.readRangeSingleMillimeters(); //SENSOR CENTRAL ESQUERDA
-  int sensorQuatro = sensorquatro.readRangeSingleMillimeters(); //SENSOR ESQUERDA
+  int sensorUm = sensorquatro.readRangeSingleMillimeters(); //SENSOR ESQUERDA
+  int sensorDois = sensordois.readRangeSingleMillimeters(); //SENSOR CENTRAL ESQUERDA
+  int sensorTres = sensortres.readRangeSingleMillimeters(); //SENSOR CENTRAL DIREITA
+  int sensorQuatro = sensorum.readRangeSingleMillimeters(); //SENSOR DIREITA
 
   //=====VERIFICAÇÃO-PARA-ENTREGAR-VALOR-CORRESPONDENTE-A-AÇÃO=====//
   if ( (sensorDois <= limiteFrente) && (sensorTres <= limiteFrente) )
   {
     if ( sensorUm > limiteLados)
     {
-      return "DIREITA";
+      return "ESQUERDA";
     }
     else if (sensorQuatro > limiteLados)
     {
-      return "ESQUERDA";
+      return "DIREITA";
     }
     else
     {
