@@ -335,27 +335,77 @@ void loop()
     String request = client.readStringUntil('\r');
     client.flush();
 
-    // HTML com atualização automática (meta refresh)
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>";
-    html += "<meta http-equiv='refresh' content='2'>";
-    html += "<title>CARRO ROBOCUP</title></head>";
-    html += "<body><h1>Sensor Infravermelho Esquerda: " + String(dist1) + "</h1></body></html>";
-    html += "<body><h1>Sensor Infravermelho Central Esquerda: " + String(dist2) + "</h1></body></html>";
-    html += "<body><h1>Sensor Infravermelho Central Direita: " + String(dist3) + "</h1></body></html>";
-    html += "<body><h1>Sensor Direita: " + String(dist4) + "</h1></body></html>";
-    html += "<body><h1>Direção: " + String(direcao) + "</h1></body></html>";
-    html += "<body><h1>Velocidade: " + String(velocidade) + "</h1></body></html>";
-    html += "<body><h1>Enconder Esquerda: " + String(encoderPulses_Esquerda) + "</h1></body></html>";
-    html += "<body><h1>Enconder Direita: " + String(encoderPulses_Direita) + "</h1></body></html>";
-    html += "<body><h1>Rotações por Segundo Esquerda: " + String(RSE) + "</h1></body></html>";
-    html += "<body><h1>Rotações por Segundo Direita: " + String(RSD) + "</h1></body></html>";
+    // Rota AJAX que envia apenas os dados em JSON
+    if (request.indexOf("GET /dados") >= 0) {
+      client.println("HTTP/1.1 200 OK");
+      client.println("Content-Type: application/json");
+      client.println("Access-Control-Allow-Origin: *");
+      client.println();
+      client.print("{");
+      client.print("\"dist1\":" + String(dist1) + ",");
+      client.print("\"dist2\":" + String(dist2) + ",");
+      client.print("\"dist3\":" + String(dist3) + ",");
+      client.print("\"dist4\":" + String(dist4) + ",");
+      client.print("\"direcao\":\"" + String(direcao) + "\",");
+      client.print("\"velocidade\":" + String(velocidade) + ",");
+      client.print("\"encoderPulses_Esquerda\":" + String(encoderPulses_Esquerda) + ",");
+      client.print("\"encoderPulses_Direita\":" + String(encoderPulses_Direita) + ",");
+      client.print("\"RSE\":" + String(RSE) + ",");
+      client.print("\"RSD\":" + String(RSD));
+      client.println("}");
+    }
+  // Página principal com AJAX
+    else {
+      String html = R"rawliteral(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>CARRO ROBOCUP</title>
+      <script>
+        function atualizarDados() {
+          fetch('/dados')
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById("dist1").innerText = data.dist1;
+              document.getElementById("dist2").innerText = data.dist2;
+              document.getElementById("dist3").innerText = data.dist3;
+              document.getElementById("dist4").innerText = data.dist4;
+              document.getElementById("direcao").innerText = data.direcao;
+              document.getElementById("velocidade").innerText = data.velocidade;
+              document.getElementById("encoderE").innerText = data.encoderPulses_Esquerda;
+              document.getElementById("encoderD").innerText = data.encoderPulses_Direita;
+              document.getElementById("RSE").innerText = data.RSE;
+              document.getElementById("RSD").innerText = data.RSD;
+            });
+        }
 
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-type:text/html");
-    client.println();
-    client.println(html);
-    client.stop();
-    Serial.println("Cliente desconectado");
+        setInterval(atualizarDados, 100); // Atualiza a cada 100 ms
+      </script>
+    </head>
+    <body>
+      <h1>Sensor Infravermelho Esquerda: <span id="dist1">--</span></h1>
+      <h1>Sensor Central Esquerda: <span id="dist2">--</span></h1>
+      <h1>Sensor Central Direita: <span id="dist3">--</span></h1>
+      <h1>Sensor Direita: <span id="dist4">--</span></h1>
+      <h1>Direção: <span id="direcao">--</span></h1>
+      <h1>Velocidade: <span id="velocidade">--</span></h1>
+      <h1>Encoder Esquerda: <span id="encoderE">--</span></h1>
+      <h1>Encoder Direita: <span id="encoderD">--</span></h1>
+      <h1>Rotações por Segundo Esquerda: <span id="RSE">--</span></h1>
+      <h1>Rotações por Segundo Direita: <span id="RSD">--</span></h1>
+    </body>
+    </html>
+    )rawliteral";
+
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.println();
+        client.println(html);
+      }
+
+      client.stop();
+      Serial.println("Cliente desconectado");
   }
 }
 
@@ -393,54 +443,91 @@ String LerSensores()
   {
     if ( sensorUm > limiteLados)
     {
-      if (encoderPulses_Direita - rotacoes <= rotacaoGraus)
+      int rotacoesDireita = encoderPulses_Direita;
+      if (rotacoesDireita < 0)
+      {
+        rotacoesDireita = rotacoesDireita * -1;
+      }
+      if (rotacoesDireita - rotacoes <= rotacaoGraus)
       {
         return "ESQUERDA";
       }
       else
       {
         return "PARE";
-        rotacoes = encoderPulses_Direita;
+        if (millis() - tempoAnterior >= 1000)
+        {
+          rotacoes = encoderPulses_Direita;
+          tempoAnterior = millis();
+        }
       }
     }
     else if (sensorQuatro > limiteLados)
     {
-      if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+      int rotacoesEsquerda = encoderPulses_Esquerda;
+      if (rotacoesEsquerda < 0)
+      {
+        rotacoesEsquerda = rotacoesEsquerda * -1;
+      }
+      if (rotacoesEsquerda - rotacoes <= rotacaoGraus)
       {
         return "DIREITA";
       }
       else
       {
         return "PARE";
-        rotacoes = encoderPulses_Direita;
+        if (millis() - tempoAnterior >= 1000)
+        {
+          rotacoes = encoderPulses_Esquerda;
+          tempoAnterior = millis();
+        }
       }
     }
     else
     {
-      if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+      int rotacoesDireita = encoderPulses_Direita;
+      if (rotacoesDireita < 0)
+      {
+        rotacoesDireita = rotacoesDireita * -1;
+      }
+      if (rotacoesDireita - rotacoes <= rotacaoGraus)
       {
         return "TRAS";
       }
       else
       {
         return "PARE";
-        rotacoes = encoderPulses_Direita;
+        if (millis() - tempoAnterior >= 1000)
+        {
+          rotacoes = encoderPulses_Direita;
+          tempoAnterior = millis();
+        }
       }
     }
   }
   else
   {
-    if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+    int rotacoesDireita = encoderPulses_Direita;
+    if (rotacoesDireita < 0)
+    {
+      rotacoesDireita = rotacoesDireita * -1;
+    }
+    if (rotacoesDireita - rotacoes <= rotacaoGraus)
     {
       return "FRENTE";
     }
     else
     {
       return "PARE";
-      rotacoes = encoderPulses_Direita;
+      if (millis() - tempoAnterior >= 1000)
+      {
+        rotacoes = encoderPulses_Direita;
+        tempoAnterior = millis();
+      }
     }
   }
 }
+
 
 void moverCarro(int vel, String dir)
 {
@@ -458,8 +545,6 @@ void moverCarro(int vel, String dir)
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
     analogWrite(DIRECAO_HORARIO_DIREITA, vel);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-
-    delay(600);
   }
   else if (dir == "ESQUERDA")
   {
@@ -467,8 +552,6 @@ void moverCarro(int vel, String dir)
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
     analogWrite(DIRECAO_HORARIO_DIREITA, vel);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-
-    delay(600);
   }
   else if (dir == "DIREITA")
   {
@@ -477,8 +560,6 @@ void moverCarro(int vel, String dir)
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
     analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
-
-    delay(600);
   }
   else if (dir == "TRAS")
   {
@@ -486,8 +567,6 @@ void moverCarro(int vel, String dir)
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
     analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
-
-    delay(600);
   }
   else if (dir == "PARE")
   {
@@ -495,6 +574,5 @@ void moverCarro(int vel, String dir)
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
     analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-
   }
 }
