@@ -59,7 +59,7 @@ WiFiServer server(80);
 #define ENCODER_B_ESQUERDA 39  // Pino comum
 
 #define ENCODER_A_DIREITA 34  // Pino de interrupção
-#define ENCODER_B_DIREITA 33  // Pino comum
+#define ENCODER_B_DIREITA 35  // Pino comum
 
 volatile long encoderPulses_Esquerda = 0;  // Contagem dos pulsos do encoder
 volatile long encoderPulses_Direita = 0;
@@ -72,6 +72,9 @@ int RSE, RPE, RSD;
 int encoderAnterior_Esquerda = 0, encoderAnterior_Direita = 0;
 
 int velocidade = 80;
+
+int rotacoes = 0;
+int rotacaoGraus = 1700;
 
 void setup() 
 {
@@ -291,8 +294,16 @@ void loop()
   if (millis() - tempoAnterior >= 1000)
   {
     RSE = encoderPulses_Esquerda - encoderAnterior_Esquerda;
+    if (RSE < 0)
+    {
+      RSE = RSE * -1;
+    }
 
     RSD = encoderPulses_Direita - encoderAnterior_Direita;
+    if (RSD < 0)
+    {
+      RSD = RSD * -1;
+    }
 
     encoderAnterior_Esquerda = encoderPulses_Esquerda;
     encoderAnterior_Direita = encoderPulses_Direita;
@@ -317,8 +328,6 @@ void loop()
 
   moverCarro(velocidade, direcao);
 
-  /*
-  // Checar conexão com cliente
   WiFiClient client = server.available();
   if (client) 
   {
@@ -326,17 +335,28 @@ void loop()
     String request = client.readStringUntil('\r');
     client.flush();
 
-    // Responder com HTML
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>ESP32 Monitor</title></head>";
-    html += "<body><h1>Sensor Infravermelho Direita: " + String(dist4) + "</h1></body></html>" + "<br>" + "<body><h1>Sensor Infravermelho Central Esquerda: " + String(dist2) + "</h1></body></html>";
+    // HTML com atualização automática (meta refresh)
+    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>";
+    html += "<meta http-equiv='refresh' content='2'>";
+    html += "<title>CARRO ROBOCUP</title></head>";
+    html += "<body><h1>Sensor Infravermelho Esquerda: " + String(dist1) + "</h1></body></html>";
+    html += "<body><h1>Sensor Infravermelho Central Esquerda: " + String(dist2) + "</h1></body></html>";
+    html += "<body><h1>Sensor Infravermelho Central Direita: " + String(dist3) + "</h1></body></html>";
+    html += "<body><h1>Sensor Direita: " + String(dist4) + "</h1></body></html>";
+    html += "<body><h1>Direção: " + String(direcao) + "</h1></body></html>";
+    html += "<body><h1>Velocidade: " + String(velocidade) + "</h1></body></html>";
+    html += "<body><h1>Enconder Esquerda: " + String(encoderPulses_Esquerda) + "</h1></body></html>";
+    html += "<body><h1>Enconder Direita: " + String(encoderPulses_Direita) + "</h1></body></html>";
+    html += "<body><h1>Rotações por Segundo Esquerda: " + String(RSE) + "</h1></body></html>";
+    html += "<body><h1>Rotações por Segundo Direita: " + String(RSD) + "</h1></body></html>";
 
     client.println("HTTP/1.1 200 OK");
     client.println("Content-type:text/html");
     client.println();
     client.println(html);
     client.stop();
+    Serial.println("Cliente desconectado");
   }
-  */
 }
 
 // Interrupção para contar os pulsos
@@ -373,20 +393,52 @@ String LerSensores()
   {
     if ( sensorUm > limiteLados)
     {
-      return "ESQUERDA";
+      if (encoderPulses_Direita - rotacoes <= rotacaoGraus)
+      {
+        return "ESQUERDA";
+      }
+      else
+      {
+        return "PARE";
+        rotacoes = encoderPulses_Direita;
+      }
     }
     else if (sensorQuatro > limiteLados)
     {
-      return "DIREITA";
+      if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+      {
+        return "DIREITA";
+      }
+      else
+      {
+        return "PARE";
+        rotacoes = encoderPulses_Direita;
+      }
     }
     else
     {
-      return "TRAS";
+      if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+      {
+        return "TRAS";
+      }
+      else
+      {
+        return "PARE";
+        rotacoes = encoderPulses_Direita;
+      }
     }
   }
   else
   {
-    return "FRENTE";
+    if (encoderPulses_Esquerda - rotacoes <= rotacaoGraus)
+    {
+      return "FRENTE";
+    }
+    else
+    {
+      return "PARE";
+      rotacoes = encoderPulses_Direita;
+    }
   }
 }
 
