@@ -22,9 +22,18 @@ VL6180X sensorquatro; //SENSOR ESQUERDA
 
 //=====DEFINIR-O-PINO-XSHUT-DO-SENSOR-INFRAVERMELHO=====//
 const int shutPinUm = 17; //SENSOR DIREITA
-const int shutPinDois = 19; //SENSOR CENTRAL DIREITA
-const int shutPinTres = 18; //SENSOR CENTRAL ESQUERDA
-const int shutPinQuatro = 5; //SENSOR ESQUERDA
+const int shutPinDois = 2; //SENSOR CENTRAL DIREITA
+const int shutPinTres = 16; //SENSOR CENTRAL ESQUERDA
+const int shutPinQuatro = 4; //SENSOR ESQUERDA
+
+#include <WiFi.h>
+
+// Credenciais do Access Point
+const char *ssid = "ROBOCUP";
+const char *password = "graxaimbots";
+
+// Criação do servidor
+WiFiServer server(80);
 
 //// GABRIELA ////
 //// TAI4V /////
@@ -58,9 +67,11 @@ int targetPulses = 1100;          // Quantidade de pulsos alvo (exemplo)
 
 int tempoAnterior;
 
-int RSE, RPE;
+int RSE, RPE, RSD;
 
-int encoderAnterior_Esquerda = 0;
+int encoderAnterior_Esquerda = 0, encoderAnterior_Direita = 0;
+
+int velocidade = 80;
 
 void setup() 
 {
@@ -88,6 +99,13 @@ void setup()
 
   //=====INICIALIZAR-WIRE=====//
   Wire.begin();
+
+  // Iniciar o Access Point
+  WiFi.softAP(ssid, password);
+  Serial.print("AP IP address: ");
+  Serial.println(WiFi.softAPIP());
+
+  server.begin();
 
   millis();
 
@@ -210,6 +228,7 @@ void loop()
   int dist3 = sensortres.readRangeSingleMillimeters();
   int dist4 = sensorum.readRangeSingleMillimeters();
 
+  /*
   //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NO-SERIAL-MONITOR=====//
   Serial.print("Distancia Sensor 1: ");
   Serial.println(dist1);
@@ -219,10 +238,12 @@ void loop()
   Serial.println(dist3);
   Serial.print("Distancia Sensor 4: ");
   Serial.println(dist4);
-
-  String direcao = LerSensores();
   Serial.print("Direção - ");
   Serial.println(direcao);
+  */
+  
+  //=====FILTRAR-VALORES-DOS-SENSORES-INFRA-PARA-OBTER-A-DIREÇÃO-QUE-O-CARRO-DEVE-IR=====//
+  String direcao = LerSensores();
 
   //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NA-TELA-OLED=====//
   display.setTextSize(1);
@@ -238,7 +259,7 @@ void loop()
   display.println(dist2);
 
   display.setCursor(0, 20);
-  display.println("CD - ");
+  display.println("CD- ");
   display.setCursor(25, 20);
   display.println(dist3);
 
@@ -252,6 +273,11 @@ void loop()
   display.setCursor(25, 40);
   display.println(direcao);
 
+  display.setCursor(0, 50);
+  display.println("VEL - ");
+  display.setCursor(35, 50);
+  display.println(velocidade);
+
   display.setCursor(50, 0);
   display.println("ENE - ");
   display.setCursor(85, 0);
@@ -260,28 +286,57 @@ void loop()
   display.setCursor(50, 10);
   display.println("END - ");
   display.setCursor(85, 10);
-  display.println(encoderPulses_Esquerda);
+  display.println(encoderPulses_Direita);
+
+  if (millis() - tempoAnterior >= 1000)
+  {
+    RSE = encoderPulses_Esquerda - encoderAnterior_Esquerda;
+
+    RSD = encoderPulses_Direita - encoderAnterior_Direita;
+
+    encoderAnterior_Esquerda = encoderPulses_Esquerda;
+    encoderAnterior_Direita = encoderPulses_Direita;
+    tempoAnterior = millis();
+  }
 
   //ROTAÇÕES POR SEGUNDO
   display.setCursor(50, 20);
   display.println("RSE - ");
   display.setCursor(85, 20);
-  /*if (millis() - tempoAnterior >= 1000)
-  {
-    RSE = encoderPulses_Esquerda - encoderAnterior_Esquerda;
-
-    encoderPulses_Esquerda = encoderAnterior_Esquerda;
-    tempoAnterior = millis();
-  }*/
   display.println(RSE);
 
+  //ROTAÇÕES POR SEGUNDO
+  display.setCursor(50, 30);
+  display.println("RSD - ");
+  display.setCursor(85, 30);
+  display.println(RSD);
 
-  //ROTAÇÕES POR MINUTO
-
+//====MOSTRAR-INFORMAÇÂO-NO-DISPLAY=====//
   display.display();
   display.clearDisplay();
 
-  moverCarro(120, direcao);
+  moverCarro(velocidade, direcao);
+
+  /*
+  // Checar conexão com cliente
+  WiFiClient client = server.available();
+  if (client) 
+  {
+    Serial.println("Cliente conectado");
+    String request = client.readStringUntil('\r');
+    client.flush();
+
+    // Responder com HTML
+    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>ESP32 Monitor</title></head>";
+    html += "<body><h1>Sensor Infravermelho Direita: " + String(dist4) + "</h1></body></html>" + "<br>" + "<body><h1>Sensor Infravermelho Central Esquerda: " + String(dist2) + "</h1></body></html>";
+
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-type:text/html");
+    client.println();
+    client.println(html);
+    client.stop();
+  }
+  */
 }
 
 // Interrupção para contar os pulsos
