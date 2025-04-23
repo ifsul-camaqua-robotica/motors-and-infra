@@ -443,88 +443,20 @@ String LerSensores()
   {
     if ( sensorUm > limiteLados)
     {
-      int rotacoesDireita = encoderPulses_Direita;
-      if (rotacoesDireita < 0)
-      {
-        rotacoesDireita = rotacoesDireita * -1;
-      }
-      if (rotacoesDireita - rotacoes <= rotacaoGraus)
-      {
-        return "ESQUERDA";
-      }
-      else
-      {
-        return "PARE";
-        if (millis() - tempoAnterior >= 1000)
-        {
-          rotacoes = encoderPulses_Direita;
-          tempoAnterior = millis();
-        }
-      }
+      return "ESQUERDA";
     }
     else if (sensorQuatro > limiteLados)
     {
-      int rotacoesEsquerda = encoderPulses_Esquerda;
-      if (rotacoesEsquerda < 0)
-      {
-        rotacoesEsquerda = rotacoesEsquerda * -1;
-      }
-      if (rotacoesEsquerda - rotacoes <= rotacaoGraus)
-      {
-        return "DIREITA";
-      }
-      else
-      {
-        return "PARE";
-        if (millis() - tempoAnterior >= 1000)
-        {
-          rotacoes = encoderPulses_Esquerda;
-          tempoAnterior = millis();
-        }
-      }
+      return "DIREITA";
     }
     else
     {
-      int rotacoesDireita = encoderPulses_Direita;
-      if (rotacoesDireita < 0)
-      {
-        rotacoesDireita = rotacoesDireita * -1;
-      }
-      if (rotacoesDireita - rotacoes <= rotacaoGraus)
-      {
-        return "TRAS";
-      }
-      else
-      {
-        return "PARE";
-        if (millis() - tempoAnterior >= 1000)
-        {
-          rotacoes = encoderPulses_Direita;
-          tempoAnterior = millis();
-        }
-      }
+      return "TRAS";
     }
   }
   else
   {
-    int rotacoesDireita = encoderPulses_Direita;
-    if (rotacoesDireita < 0)
-    {
-      rotacoesDireita = rotacoesDireita * -1;
-    }
-    if (rotacoesDireita - rotacoes <= rotacaoGraus)
-    {
-      return "FRENTE";
-    }
-    else
-    {
-      return "PARE";
-      if (millis() - tempoAnterior >= 1000)
-      {
-        rotacoes = encoderPulses_Direita;
-        tempoAnterior = millis();
-      }
-    }
+    return "FRENTE";
   }
 }
 
@@ -541,25 +473,54 @@ void moverCarro(int vel, String dir)
   Serial.println(dir);
   if (dir == "FRENTE")
   {
-    analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
-    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
-    analogWrite(DIRECAO_HORARIO_DIREITA, vel);
-    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    int rotacoesDireita = encoderPulses_Direita;
+    if (rotacoesDireita < 0)
+    {
+      rotacoesDireita = rotacoesDireita * -1;
+    }
+    while (rotacoesDireita - rotacoes <= rotacaoGraus)
+    {
+      rotacoesDireita = encoderPulses_Direita;
+      analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
+      analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+      analogWrite(DIRECAO_HORARIO_DIREITA, vel);
+      analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    }
+    rotacoes = encoderPulses_Direita;
   }
   else if (dir == "ESQUERDA")
   {
-    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
-    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
-    analogWrite(DIRECAO_HORARIO_DIREITA, vel);
-    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    int rotacoesDireita = encoderPulses_Direita;
+    if (rotacoesDireita < 0)
+    {
+      rotacoesDireita = rotacoesDireita * -1;
+    }
+    while (rotacoesDireita - rotacoes <= rotacaoGraus)
+    {
+      rotacoesDireita = encoderPulses_Direita;
+      analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+      analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
+      analogWrite(DIRECAO_HORARIO_DIREITA, vel);
+      analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    }
+    rotacoes = encoderPulses_Direita;
   }
   else if (dir == "DIREITA")
   {
-    encoderISR_ESQUERDA();
-    analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
-    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
-    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
-    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
+    int rotacoesEsquerda = encoderPulses_Esquerda;
+    if (rotacoesEsquerda < 0)
+    {
+      rotacoesEsquerda = rotacoesEsquerda * -1;
+    }
+    while (rotacoesEsquerda - rotacoes <= rotacaoGraus)
+    {
+      rotacoesEsquerda = encoderPulses_Esquerda;
+      analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
+      analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+      analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+      analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
+    }
+    rotacoes = encoderPulses_Esquerda;
   }
   else if (dir == "TRAS")
   {
@@ -570,9 +531,13 @@ void moverCarro(int vel, String dir)
   }
   else if (dir == "PARE")
   {
-    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
-    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
-    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
-    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    while (millis() - tempoAnterior <= 1000)
+    {
+      analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+      analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+      analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+      analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+    }
+    tempoAnterior = millis();
   }
 }
