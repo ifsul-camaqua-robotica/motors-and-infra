@@ -11,20 +11,20 @@
 //=====PARAMETROS-UTILIZADOS-NA-TELA-OLED=====//
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define OLED_RESET    -1
+#define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //=====DEFINICAO-DOS-SENSORES-INFRAVERMELHOS=====//
-VL6180X sensorum; //SENSOR DIREITA
-VL6180X sensordois; //SENSOR CENTRAL DIREITA
-VL6180X sensortres; //SENSOR CENTRAL ESQUERDA
-VL6180X sensorquatro; //SENSOR ESQUERDA
+VL6180X sensorum;      //SENSOR DIREITA
+VL6180X sensordois;    //SENSOR CENTRAL DIREITA
+VL6180X sensortres;    //SENSOR CENTRAL ESQUERDA
+VL6180X sensorquatro;  //SENSOR ESQUERDA
 
 //=====DEFINIR-O-PINO-XSHUT-DO-SENSOR-INFRAVERMELHO=====//
-const int shutPinUm = 17; //SENSOR DIREITA
-const int shutPinDois = 2; //SENSOR CENTRAL DIREITA
-const int shutPinTres = 16; //SENSOR CENTRAL ESQUERDA
-const int shutPinQuatro = 4; //SENSOR ESQUERDA
+const int shutPinUm = 17;     //SENSOR DIREITA
+const int shutPinDois = 2;    //SENSOR CENTRAL DIREITA
+const int shutPinTres = 16;   //SENSOR CENTRAL ESQUERDA
+const int shutPinQuatro = 4;  //SENSOR ESQUERDA
 
 #include <WiFi.h>
 
@@ -44,7 +44,7 @@ WiFiServer server(80);
 //#define PWM_MOTOR_DIREITA A2
 //#define PWM_MOTOR_ESQUERDA A3
 
-//// PINOS DIREÇÕES MOTOR DIREITA //// 
+//// PINOS DIREÇÕES MOTOR DIREITA ////
 #define DIRECAO_HORARIO_DIREITA 12
 #define DIRECAO_ANTIHORARIO_DIREITA 14
 
@@ -63,7 +63,7 @@ WiFiServer server(80);
 
 volatile long encoderPulses_Esquerda = 0;  // Contagem dos pulsos do encoder
 volatile long encoderPulses_Direita = 0;
-int targetPulses = 1100;          // Quantidade de pulsos alvo (exemplo)
+int targetPulses = 1100;  // Quantidade de pulsos alvo (exemplo)
 
 int tempoAnterior;
 
@@ -76,8 +76,16 @@ int velocidade = 80;
 int rotacoes = 0;
 int rotacaoGraus = 1700;
 
-void setup() 
-{
+bool movimento;
+
+int encoderEsquerda;
+int encoderDireita;
+
+int rotacao = 4000;
+
+String direcao;
+
+void setup() {
   pinMode(ENCODER_A_ESQUERDA, INPUT_PULLUP);
   pinMode(ENCODER_B_ESQUERDA, INPUT_PULLUP);
 
@@ -94,7 +102,7 @@ void setup()
 
   pinMode(DIRECAO_HORAIO_ESQUERDA, OUTPUT);
   pinMode(DIRECAO_ANTIHORARIO_ESQUERDA, OUTPUT);
-  
+
   //// PARTE DO CODIGO ESCRITO PELA GABRIELA ////
 
   //=====INICIALIZAR-SERIAL=====//
@@ -128,7 +136,7 @@ void setup()
 
   //=====AGORA-QUE-HA-APENAS-UM-SENSOR-DE-MESMO-ENDERECO-CONECTADO-E-LIGADO-INICIALIZAR-O-PRIMEIRO-SENSOR=====//
 
-  sensorquatro.init(); //SENSOR ESQUERDA
+  sensorquatro.init();  //SENSOR ESQUERDA
 
   //=====DEFINIR-CONFIGURACOES-PADRAO=====//
   sensorquatro.configureDefault();
@@ -139,7 +147,7 @@ void setup()
 
   //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-TERCEIRO-SENSOR-NOVAMENTE=====//
 
-  digitalWrite(shutPinTres, HIGH); //SENSOR CENTRAL ESQUERDA
+  digitalWrite(shutPinTres, HIGH);  //SENSOR CENTRAL ESQUERDA
 
   //=====ESPERAR-PARA-POSSUIR-VERACIDADE-DO-PINO=====//
   delay(50);
@@ -155,7 +163,7 @@ void setup()
 
   //=====AGORA-QUE-HA-APENAS-ENDERECOS-ORIGINAIS-CONECTADOS-LIGAR-O-SEGUNDO-SENSOR-NOVAMENTE=====//
 
-  digitalWrite(shutPinDois, HIGH); //SENSOR CENTRAL DIREITA
+  digitalWrite(shutPinDois, HIGH);  //SENSOR CENTRAL DIREITA
 
   //=====ESPERAR-PARA-POSSUIR-VERACIDADE-DO-PINO=====//
   delay(50);
@@ -185,13 +193,13 @@ void setup()
   //=====NAO-E-NECESSARIO-MUDAR-O-ENDERECO-DO-PRIMEIRO-SENSOR-POIS-HA-APENAS-UM-COM-O-ENDERECO-0X29=====//
 
   //=====FUNÇÕES-QUE-TALVEZ-PRECISEMOS-PARA-OS-SENSORES=====//
-  
+
   //sensor.writeReg(VL6180X::SYSRANGE__PART_TO_PART_RANGE_OFFSET, 5);  // Define um offset de 5 mm
 
-  sensorum.setScaling(2);  // Escala 2x para maior alcance 
-  sensordois.setScaling(2);  // Escala 2x para maior alcance 
-  sensortres.setScaling(2);  // Escala 2x para maior alcance 
-  sensorquatro.setScaling(2);  // Escala 2x para maior alcance 
+  sensorum.setScaling(2);      // Escala 2x para maior alcance
+  sensordois.setScaling(2);    // Escala 2x para maior alcance
+  sensortres.setScaling(2);    // Escala 2x para maior alcance
+  sensorquatro.setScaling(2);  // Escala 2x para maior alcance
 
   //=====EXIBIR-MENSAGEM-NA-TELA-OLED=====//
 
@@ -218,12 +226,11 @@ void setup()
 
   //=====ESPERAR-2-SEGUNDOS=====//
   delay(2000);
-  
+
   display.clearDisplay();
 }
 
-void loop() 
-{
+void loop() {
   //=====LER-VALOR-DA-DISTANCIA-DOS-INFRAVERMELHOS=====//
   //=====O-LIMITE-DOS-SENSORES-INFRAVERMELHOS-E-DE-20CM=====//
   int dist1 = sensorquatro.readRangeSingleMillimeters();
@@ -244,64 +251,18 @@ void loop()
   Serial.print("Direção - ");
   Serial.println(direcao);
   */
-  
+
   //=====FILTRAR-VALORES-DOS-SENSORES-INFRA-PARA-OBTER-A-DIREÇÃO-QUE-O-CARRO-DEVE-IR=====//
-  String direcao = LerSensores();
+  direcao = LerSensores();
 
-  //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NA-TELA-OLED=====//
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.println("E - ");
-  display.setCursor(25, 0);
-  display.println(dist1);
-
-  display.setCursor(0, 10);
-  display.println("CE- ");
-  display.setCursor(25, 10);
-  display.println(dist2);
-
-  display.setCursor(0, 20);
-  display.println("CD- ");
-  display.setCursor(25, 20);
-  display.println(dist3);
-
-  display.setCursor(0, 30);
-  display.println("D - ");
-  display.setCursor(25, 30);
-  display.println(dist4);
-
-  display.setCursor(0, 40);
-  display.println("DR - ");
-  display.setCursor(25, 40);
-  display.println(direcao);
-
-  display.setCursor(0, 50);
-  display.println("VEL - ");
-  display.setCursor(35, 50);
-  display.println(velocidade);
-
-  display.setCursor(50, 0);
-  display.println("ENE - ");
-  display.setCursor(85, 0);
-  display.println(encoderPulses_Esquerda);
-
-  display.setCursor(50, 10);
-  display.println("END - ");
-  display.setCursor(85, 10);
-  display.println(encoderPulses_Direita);
-
-  if (millis() - tempoAnterior >= 1000)
-  {
+  if (millis() - tempoAnterior >= 1000) {
     RSE = encoderPulses_Esquerda - encoderAnterior_Esquerda;
-    if (RSE < 0)
-    {
+    if (RSE < 0) {
       RSE = RSE * -1;
     }
 
     RSD = encoderPulses_Direita - encoderAnterior_Direita;
-    if (RSD < 0)
-    {
+    if (RSD < 0) {
       RSD = RSD * -1;
     }
 
@@ -310,53 +271,44 @@ void loop()
     tempoAnterior = millis();
   }
 
-  //ROTAÇÕES POR SEGUNDO
-  display.setCursor(50, 20);
-  display.println("RSE - ");
-  display.setCursor(85, 20);
-  display.println(RSE);
+  DesenharTela(dist1, dist2, dist3, dist4, direcao, velocidade, RSE, RSD);
 
-  //ROTAÇÕES POR SEGUNDO
-  display.setCursor(50, 30);
-  display.println("RSD - ");
-  display.setCursor(85, 30);
-  display.println(RSD);
-
-//====MOSTRAR-INFORMAÇÂO-NO-DISPLAY=====//
-  display.display();
-  display.clearDisplay();
-
-  moverCarro(velocidade, direcao);
+  MoverCarro(velocidade, direcao);
 
   WiFiClient client = server.available();
   if (client) 
   {
-    Serial.println("Cliente conectado");
-    String request = client.readStringUntil('\r');
-    client.flush();
+    PararCarro();
 
-    // Rota AJAX que envia apenas os dados em JSON
-    if (request.indexOf("GET /dados") >= 0) {
-      client.println("HTTP/1.1 200 OK");
-      client.println("Content-Type: application/json");
-      client.println("Access-Control-Allow-Origin: *");
-      client.println();
-      client.print("{");
-      client.print("\"dist1\":" + String(dist1) + ",");
-      client.print("\"dist2\":" + String(dist2) + ",");
-      client.print("\"dist3\":" + String(dist3) + ",");
-      client.print("\"dist4\":" + String(dist4) + ",");
-      client.print("\"direcao\":\"" + String(direcao) + "\",");
-      client.print("\"velocidade\":" + String(velocidade) + ",");
-      client.print("\"encoderPulses_Esquerda\":" + String(encoderPulses_Esquerda) + ",");
-      client.print("\"encoderPulses_Direita\":" + String(encoderPulses_Direita) + ",");
-      client.print("\"RSE\":" + String(RSE) + ",");
-      client.print("\"RSD\":" + String(RSD));
-      client.println("}");
-    }
-  // Página principal com AJAX
-    else {
-      String html = R"rawliteral(
+
+    WiFiClient client = server.available();
+    if (client) {
+      Serial.println("Cliente conectado");
+      String request = client.readStringUntil('\r');
+      client.flush();
+
+      // Rota AJAX que envia apenas os dados em JSON
+      if (request.indexOf("GET /dados") >= 0) {
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-Type: application/json");
+        client.println("Access-Control-Allow-Origin: *");
+        client.println();
+        client.print("{");
+        client.print("\"dist1\":" + String(dist1) + ",");
+        client.print("\"dist2\":" + String(dist2) + ",");
+        client.print("\"dist3\":" + String(dist3) + ",");
+        client.print("\"dist4\":" + String(dist4) + ",");
+        client.print("\"direcao\":\"" + String(direcao) + "\",");
+        client.print("\"velocidade\":" + String(velocidade) + ",");
+        client.print("\"encoderPulses_Esquerda\":" + String(encoderPulses_Esquerda) + ",");
+        client.print("\"encoderPulses_Direita\":" + String(encoderPulses_Direita) + ",");
+        client.print("\"RSE\":" + String(RSE) + ",");
+        client.print("\"RSD\":" + String(RSD));
+        client.println("}");
+      }
+      // Página principal com AJAX
+      else {
+        String html = R"rawliteral(
     <!DOCTYPE html>
     <html>
     <head>
@@ -406,138 +358,190 @@ void loop()
 
       client.stop();
       Serial.println("Cliente desconectado");
+    }
   }
 }
 
+void DesenharTela(int sensorEsquerdo, int sensorCentralEsquerdo, int sensorCentralDireito, int sensorDireito, String direcao, int velocidade, int rotacoesSegundoEsquerda, int rotacoesSegundoDireita)
+{
+  //=====IMPRIMIR-O-VALOR-DA-DISTANCIA-DOS-SENSORES-NA-TELA-OLED=====//
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("E - ");
+  display.setCursor(25, 0);
+  display.println(sensorEsquerdo);
+
+  display.setCursor(0, 10);
+  display.println("CE- ");
+  display.setCursor(25, 10);
+  display.println(sensorCentralEsquerdo);
+
+  display.setCursor(0, 20);
+  display.println("CD- ");
+  display.setCursor(25, 20);
+  display.println(sensorCentralDireito);
+
+  display.setCursor(0, 30);
+  display.println("D - ");
+  display.setCursor(25, 30);
+  display.println(sensorDireito);
+
+  display.setCursor(0, 40);
+  display.println("DR - ");
+  display.setCursor(25, 40);
+  display.println(direcao);
+
+  display.setCursor(0, 50);
+  display.println("VEL - ");
+  display.setCursor(35, 50);
+  display.println(velocidade);
+
+  display.setCursor(50, 0);
+  display.println("ENE - ");
+  display.setCursor(85, 0);
+  display.println(encoderPulses_Esquerda);
+
+  display.setCursor(50, 10);
+  display.println("END - ");
+  display.setCursor(85, 10);
+  display.println(encoderPulses_Direita);
+
+  //ROTAÇÕES POR SEGUNDO
+  display.setCursor(50, 20);
+  display.println("RSE - ");
+  display.setCursor(85, 20);
+  display.println(rotacoesSegundoEsquerda);
+
+  //ROTAÇÕES POR SEGUNDO
+  display.setCursor(50, 30);
+  display.println("RSD - ");
+  display.setCursor(85, 30);
+  display.println(rotacoesSegundoDireita);
+
+  //====MOSTRAR-INFORMAÇÂO-NO-DISPLAY=====//
+  display.display();
+  display.clearDisplay();
+}
 // Interrupção para contar os pulsos
 void encoderISR_ESQUERDA() {
-    if (digitalRead(ENCODER_A_ESQUERDA) == digitalRead(ENCODER_B_ESQUERDA)) {
-        encoderPulses_Esquerda++;  // Incrementa se girando em um sentido
-    } else {
-        encoderPulses_Esquerda--;  // Decrementa se girando no outro sentido
-    }
+  if (digitalRead(ENCODER_A_ESQUERDA) == digitalRead(ENCODER_B_ESQUERDA)) {
+    encoderPulses_Esquerda++;  // Incrementa se girando em um sentido
+  } else {
+    encoderPulses_Esquerda--;  // Decrementa se girando no outro sentido
+  }
 }
 
 void encoderISR_DIREITA() {
-    if (digitalRead(ENCODER_A_DIREITA) == digitalRead(ENCODER_B_DIREITA)) {
-        encoderPulses_Direita++;  // Incrementa se girando em um sentido
-    } else {
-        encoderPulses_Direita--;  // Decrementa se girando no outro sentido
-    }
+  if (digitalRead(ENCODER_A_DIREITA) == digitalRead(ENCODER_B_DIREITA)) {
+    encoderPulses_Direita++;  // Incrementa se girando em um sentido
+  } else {
+    encoderPulses_Direita--;  // Decrementa se girando no outro sentido
+  }
 }
 
 //=====FUNÇÃO-PARA-LER-SENSORES-INFRAVERMELHOS-E-ENTREGAR-STRING=====//
-String LerSensores()
-{
+String LerSensores() {
   int limiteFrente = 150;
   int limiteLados = 120;
 
   //=====VARIAVEIS-UTILIZADAS-PARA-LER-SENSORES=====//
-  int sensorUm = sensorquatro.readRangeSingleMillimeters(); //SENSOR ESQUERDA
-  int sensorDois = sensordois.readRangeSingleMillimeters(); //SENSOR CENTRAL ESQUERDA
-  int sensorTres = sensortres.readRangeSingleMillimeters(); //SENSOR CENTRAL DIREITA
-  int sensorQuatro = sensorum.readRangeSingleMillimeters(); //SENSOR DIREITA
+  int sensorUm = sensorquatro.readRangeSingleMillimeters();  //SENSOR ESQUERDA
+  int sensorDois = sensordois.readRangeSingleMillimeters();  //SENSOR CENTRAL ESQUERDA
+  int sensorTres = sensortres.readRangeSingleMillimeters();  //SENSOR CENTRAL DIREITA
+  int sensorQuatro = sensorum.readRangeSingleMillimeters();  //SENSOR DIREITA
 
   //=====VERIFICAÇÃO-PARA-ENTREGAR-VALOR-CORRESPONDENTE-A-AÇÃO=====//
-  if ( (sensorDois <= limiteFrente) && (sensorTres <= limiteFrente) )
-  {
-    if ( sensorUm > limiteLados)
-    {
+  if ((sensorDois <= limiteFrente) && (sensorTres <= limiteFrente)) {
+    if (sensorUm > limiteLados) {
       return "ESQUERDA";
-    }
-    else if (sensorQuatro > limiteLados)
-    {
+    } else if (sensorQuatro > limiteLados) {
       return "DIREITA";
-    }
-    else
-    {
+    } else {
       return "TRAS";
     }
-  }
-  else
-  {
+  } else {
     return "FRENTE";
   }
 }
 
 
-void moverCarro(int vel, String dir)
-{
+void MoverCarro(int vel, String dir) {
   int contador;
 
   Serial.print("ENCODER ESQUERDA:  ");
-  Serial.println(encoderPulses_Esquerda); 
-  Serial.print("ENCODER DIREITA:  ") ;
-  Serial.println(encoderPulses_Direita); 
-  
+  Serial.println(encoderPulses_Esquerda);
+  Serial.print("ENCODER DIREITA:  ");
+  Serial.println(encoderPulses_Direita);
+
   Serial.println(dir);
-  if (dir == "FRENTE")
-  {
-    int rotacoesDireita = encoderPulses_Direita;
-    if (rotacoesDireita < 0)
-    {
-      rotacoesDireita = rotacoesDireita * -1;
-    }
-    while (rotacoesDireita - rotacoes <= rotacaoGraus)
-    {
-      rotacoesDireita = encoderPulses_Direita;
+  if (dir == "FRENTE") {
+    rotacoes = encoderEsquerda;
+    while (encoderEsquerda - rotacoes <= rotacao) {
+      encoderEsquerda = encoderPulses_Esquerda;
+      if (encoderEsquerda < 0)
+      {
+        encoderEsquerda = encoderEsquerda * -1;
+      }
       analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
       analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
       analogWrite(DIRECAO_HORARIO_DIREITA, vel);
       analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
     }
-    rotacoes = encoderPulses_Direita;
-  }
-  else if (dir == "ESQUERDA")
-  {
-    int rotacoesDireita = encoderPulses_Direita;
-    if (rotacoesDireita < 0)
-    {
-      rotacoesDireita = rotacoesDireita * -1;
-    }
-    while (rotacoesDireita - rotacoes <= rotacaoGraus)
-    {
-      rotacoesDireita = encoderPulses_Direita;
+    PararCarro();
+    rotacoes = encoderEsquerda;
+  } 
+  else if (dir == "ESQUERDA") {
+    rotacoes = encoderDireita;
+    while (encoderDireita - rotacoes <= rotacao) {
+      encoderDireita = encoderPulses_Direita;
+      if (encoderDireita < 0)
+      {
+        encoderDireita = encoderDireita * -1;
+      }
       analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
       analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
       analogWrite(DIRECAO_HORARIO_DIREITA, vel);
       analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-    }
-    rotacoes = encoderPulses_Direita;
-  }
-  else if (dir == "DIREITA")
-  {
-    int rotacoesEsquerda = encoderPulses_Esquerda;
-    if (rotacoesEsquerda < 0)
-    {
-      rotacoesEsquerda = rotacoesEsquerda * -1;
-    }
-    while (rotacoesEsquerda - rotacoes <= rotacaoGraus)
-    {
-      rotacoesEsquerda = encoderPulses_Esquerda;
+    } 
+    PararCarro();
+    rotacoes = encoderDireita;
+
+  } else if (dir == "DIREITA") {
+    rotacoes = encoderEsquerda;
+    while (encoderEsquerda - rotacoes <= 5700) {
+      encoderEsquerda = encoderPulses_Esquerda;
+      if (encoderEsquerda < 0)
+      {
+        encoderEsquerda = encoderEsquerda * -1;
+      }
       analogWrite(DIRECAO_HORAIO_ESQUERDA, vel);
       analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
       analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
       analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
-    }
-    rotacoes = encoderPulses_Esquerda;
-  }
-  else if (dir == "TRAS")
-  {
+    } 
+    PararCarro();
+    rotacoes = encoderEsquerda;
+  } 
+  else if (dir == "TRAS") {
     analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
     analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, vel);
     analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
     analogWrite(DIRECAO_ANTIHORARIO_DIREITA, vel);
+  } else if (dir == "PARE") {
+    PararCarro();
   }
-  else if (dir == "PARE")
-  {
-    while (millis() - tempoAnterior <= 1000)
-    {
-      analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
-      analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
-      analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
-      analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
-    }
-    tempoAnterior = millis();
+}
+
+void PararCarro() {
+  while (millis() - tempoAnterior <= 1000) {
+    analogWrite(DIRECAO_HORAIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_ESQUERDA, LOW);
+    analogWrite(DIRECAO_HORARIO_DIREITA, LOW);
+    analogWrite(DIRECAO_ANTIHORARIO_DIREITA, LOW);
+
+    direcao = LerSensores();
   }
+  tempoAnterior = millis();
+  movimento = true;
 }
